@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify
 from croniter import croniter
 from datetime import datetime
@@ -6,21 +7,15 @@ app = Flask(__name__)
 
 @app.route('/get-cron-schedule', methods=['GET'])
 def get_cron_schedule():
-    # Obter a expressão cron e o parâmetro da quantidade de datas
     cron_expression = request.args.get('expression')
-    count = request.args.get('count', default=5, type=int)  # Padrão é 5
+    count = request.args.get('count', default=5, type=int)
 
     if not cron_expression:
         return jsonify({'error': 'Cron expression is required'}), 400
 
     try:
-        # Data/hora atual
         base_time = datetime.now()
-
-        # Cria um iterador a partir da expressão Cron
         cron = croniter(cron_expression, base_time)
-
-        # Obtém as próximas 'count' datas
         next_dates = [cron.get_next(datetime).strftime('%Y-%m-%d %H:%M:%S') for _ in range(count)]
 
         return jsonify({'next_dates': next_dates}), 200
@@ -28,4 +23,5 @@ def get_cron_schedule():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))  # O Render define a porta na variável de ambiente PORT
+    app.run(host='0.0.0.0', port=port, debug=True)
